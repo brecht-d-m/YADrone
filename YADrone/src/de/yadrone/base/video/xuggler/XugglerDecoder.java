@@ -12,7 +12,8 @@ import com.xuggle.xuggler.IStream;
 import com.xuggle.xuggler.IStreamCoder;
 import com.xuggle.xuggler.IVideoPicture;
 import com.xuggle.xuggler.IVideoResampler;
-import com.xuggle.xuggler.Utils;
+import com.xuggle.xuggler.video.ConverterFactory;
+import com.xuggle.xuggler.video.IConverter;
 
 import de.yadrone.base.video.ImageListener;
 import de.yadrone.base.video.VideoDecoder;
@@ -62,7 +63,7 @@ public class XugglerDecoder implements VideoDecoder
 		 * Now we have found the video stream in this file. Let's open up our
 		 * decoder so it can do work.
 		 */
-		if (videoCoder.open() < 0)
+		if (videoCoder.open(null, null) < 0)
 			throw new RuntimeException("could not open video decoder for container");
 
 		IVideoResampler resampler = null;
@@ -74,6 +75,9 @@ public class XugglerDecoder implements VideoDecoder
 			if (resampler == null)
 				throw new RuntimeException("could not create color space resampler.");
 		}
+
+		IVideoPicture picture = IVideoPicture.make(videoCoder.getPixelType(), videoCoder.getWidth(), videoCoder.getHeight());
+        	IConverter converter = ConverterFactory.createConverter(ConverterFactory.XUGGLER_BGR_24, picture);
 
 		/*
 		 * Now, we start walking through the container looking at each packet.
@@ -187,7 +191,7 @@ public class XugglerDecoder implements VideoDecoder
 	
 							// And finally, convert the BGR24 to an Java buffered image
 //							System.out.println("3 create BufferedImage");
-							BufferedImage javaImage = Utils.videoPictureToImage(newPic);
+							BufferedImage javaImage = converter.toImage(newPic);
 	
 							// and display it on the Java Swing window
 							if (listener != null)
